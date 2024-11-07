@@ -1,74 +1,47 @@
 const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
+const port = process.env.PORT || 3000;
 
-const cors = require('cors');
-app.use(cors());
+// Middleware to parse incoming JSON data
+app.use(bodyParser.json());
 
-// Store rooms with their IDs and names
-const rooms = {};
+// MongoDB connection (optional)
+mongoose.connect('mongodb://localhost:27017/contactsDB', { useNewUrlParser: true, useUnifiedTopology: true });
 
-// Serve a basic HTML page on the root URL
-app.get('/', (req, res) => {
-    res.send('<h1>Welcome to the Socket.IO Server</h1>');
+const contactSchema = new mongoose.Schema({
+  name: String,
+  phone: String
 });
 
-// Listen for connections
-io.on('connection', (socket) => {
-    console.log('A user connected: ' + socket.id);
+const Contact = mongoose.model('Contact', contactSchema);
 
-    // Listen for createRoom event
-    socket.on('createRoom', (roomName, callback) => {
-        const roomId = Math.random().toString(36).substring(2, 15); // Generate room ID
-        rooms[roomId] = roomName; // Store room ID and name
+// POST route to handle incoming contact data
+app.post('/api/contacts', async (req, res) => {
+  try {
+    const contacts = req.body;
 
-        socket.join(roomId); // Join the room
-        console.log('Room created: ' + roomId + ' with name: ' + roomName);
-        
-        // Emit roomCreated event back to the client
-        socket.emit('roomCreated', roomId); // Always emit roomCreated
-        
-        // If the callback exists, call it
-        if (typeof callback === 'function') {
-            callback(roomId); // Send roomId back via callback if needed
-        }
-    });
+    // Log received contacts
+    console.log('Received contacts:', contacts);
 
-    // Listen for joinRoom event
-    socket.on('joinRoom', (roomId, callback) => {
-        if (roomId && rooms[roomId]) {
-            socket.join(roomId); // Join the room
-            const roomName = rooms[roomId]; // Get the room name
-            console.log('User ' + socket.id + ' joined room: ' + roomId + ' (' + roomName + ')');
-            
-            // Emit success response with room name and roomId
-            socket.emit('roomJoined', true, roomName);
-            
-            // Call the callback function if provided, and pass the room name and roomId
-            if (typeof callback === 'function') {
-                callback(true, roomName);
-            }
-        } else {
-            console.log('Failed to join room: ' + roomId);
-            // Emit failure response if room ID is invalid
-            socket.emit('roomJoined', false);
-            
-            if (typeof callback === 'function') {
-                callback(false);
-            }
-        }
-    });
+    // Store contacts in MongoDB (optional)
+    await Contact.insertMany(contacts);
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected: ' + socket.id);
-    });
+    res.status(200).json({ message: 'Contacts received and stored successfully' });
+  } catch (error) {
+    console.error('Error handling contacts:', error);
+    res.status(500).json({ message: 'An error occurred while saving contacts' });
+  }
+});
+
+// Simple GET route for testing
+app.get('/', (req, res) => {
+  res.send('Contact API is running');
 });
 
 // Start the server
-server.listen(3000, () => {
-    console.log('Server is running on http://192.168.22.27:3000');
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
