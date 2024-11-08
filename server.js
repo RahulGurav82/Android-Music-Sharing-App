@@ -8,7 +8,7 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
 // MongoDB connection string
-const dbURI = 'mongodb+srv://Rahul:Rahul@mario.b6prz.mongodb.net/yourDatabaseName'; // Replace 'yourDatabaseName' with your actual database name
+const dbURI = 'mongodb+srv://Rahul:Rahul@mario.b6prz.mongodb.net/Contacts'; // Replace 'yourDatabaseName' with your actual database name
 
 // Connect to MongoDB
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
