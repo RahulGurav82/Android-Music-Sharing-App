@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const MongoStore = require('connect-mongo'); // Added MongoStore for session storage
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -18,13 +19,16 @@ app.use(session({
   secret: 'asdfghjklqwertyuiopzxcvbnm', // Replace with a strong secret key
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: true } 
+  store: MongoStore.create({
+    mongoUrl: 'mongodb+srv://Rahul:Rahul@mario.b6prz.mongodb.net/Contacts', // Use MongoDB for session storage
+  }),
+  cookie: { secure: false } // Set secure to false for development or if not using HTTPS
 }));
 
-// MongoDB connection
+// MongoDB connection (removed deprecated options)
 const dbURI = 'mongodb+srv://Rahul:Rahul@mario.b6prz.mongodb.net/Contacts';
 
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(dbURI)
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.error('Error connecting to MongoDB:', error));
 
@@ -44,21 +48,6 @@ const adminSchema = new mongoose.Schema({
 });
 
 const Admin = mongoose.model('Admin', adminSchema);
-
-// Seed the initial admin user (only once)
-Admin.findOne({ username: 'Rahul' }).then(admin => {
-  if (!admin) {
-    bcrypt.hash('Rahul@428742', 10, (err, hashedPassword) => {
-      if (!err) {
-        new Admin({ username: 'Rahul', password: hashedPassword }).save()
-          .then(() => console.log('Admin user created with username: Rahul'))
-          .catch((error) => console.error('Error creating admin:', error));
-      }
-    });
-  } else {
-    console.log('Admin user already exists');
-  }
-});
 
 // Middleware to check if the admin is authenticated
 function isAuthenticated(req, res, next) {
@@ -110,6 +99,7 @@ app.get('/admin/dashboard', isAuthenticated, async (req, res) => {
 // POST route to add new contacts
 app.post('/contacts', isAuthenticated, async (req, res) => {
   const { name, email, phone } = req.body;
+  console.log('Form data received:', { name, email, phone }); // Debugging
   try {
     const newContact = new Contact({ name, email, phone });
     await newContact.save();
