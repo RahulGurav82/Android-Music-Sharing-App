@@ -97,18 +97,25 @@ app.get('/admin/dashboard', isAuthenticated, async (req, res) => {
 });
 
 // POST route to add new contacts
-app.post('/contacts', async (req, res) => {
-  const { name, email, phone } = req.body;
-  console.log('Form data received:', { name, email, phone }); // Debugging
+// POST route to handle incoming contact data
+app.post('/api/contacts', async (req, res) => {
   try {
-    const newContact = new Contact({ name, email, phone });
-    await newContact.save();
-    res.redirect('/admin/dashboard'); // Redirect to the dashboard after saving
+    const newContacts = req.body;
+
+    // Log received contacts
+    console.log('Received contacts:', newContacts);
+
+    // Store contacts in MongoDB
+    const savedContacts = await Contact.insertMany(newContacts);
+
+    // Respond to client
+    res.status(200).json({ message: 'Contacts received and saved successfully', savedContacts });
   } catch (error) {
-    console.error('Error saving contact:', error);
-    res.status(500).json({ message: 'An error occurred while saving the contact' });
+    console.error('Error handling contacts:', error);
+    res.status(500).json({ message: 'An error occurred while processing contacts' });
   }
 });
+
 
 // Start the server
 app.listen(port, () => {
