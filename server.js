@@ -22,7 +22,7 @@ app.use(session({
   store: MongoStore.create({
     mongoUrl: 'mongodb+srv://Rahul:Rahul@mario.b6prz.mongodb.net/Contacts', // Use MongoDB for session storage
   }),
-  cookie: { secure: false } // Set secure to false for development or if not using HTTPS
+  cookie: { secure: true } // Set secure to false for development or if not using HTTPS
 }));
 
 // MongoDB connection (removed deprecated options)
@@ -97,7 +97,7 @@ app.get('/admin/dashboard', isAuthenticated, async (req, res) => {
 });
 
 // POST route to add new contacts
-app.post('/contacts', isAuthenticated, async (req, res) => {
+app.post('/contacts', async (req, res) => {
   const { name, email, phone } = req.body;
   console.log('Form data received:', { name, email, phone }); // Debugging
   try {
