@@ -22,7 +22,7 @@ app.use(session({
   store: MongoStore.create({
     mongoUrl: 'mongodb+srv://Rahul:Rahul@mario.b6prz.mongodb.net/Contacts', // Use MongoDB for session storage
   }),
-  cookie: { secure: true } // Set secure to false for development or if not using HTTPS
+  cookie: { secure: false } // Set secure to false for development or if not using HTTPS
 }));
 
 // MongoDB connection (removed deprecated options)
@@ -86,7 +86,7 @@ app.post('/login', async (req, res) => {
 });
 
 // Admin dashboard (only accessible when logged in)
-app.get('/admin/dashboard', isAuthenticated, async (req, res) => {
+app.get('/admin/dashboard', async (req, res) => {
   try {
     const contacts = await Contact.find(); // Fetch all contacts
     res.render('dashboard', { contacts }); // Render dashboard.ejs with contacts
