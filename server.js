@@ -18,7 +18,7 @@ app.use(session({
   secret: 'asdfghjklqwertyuiopzxcvbnm', // Replace with a strong secret key
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: true } // Set secure: true when using HTTPS
+  cookie: { secure: true } 
 }));
 
 // MongoDB connection
